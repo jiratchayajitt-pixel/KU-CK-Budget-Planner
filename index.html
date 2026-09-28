@@ -1,0 +1,950 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KU-CK Budget Planner</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Noto Sans Thai", "Segoe UI", sans-serif;
+      background: #f5f8f6;
+      color: #24352b;
+    }
+    button, input, select { font: inherit; }
+
+    .app {
+      min-height: 100vh;
+      display: flex;
+    }
+
+    /* ===== Sidebar ===== */
+    .sidebar {
+      width: 245px;
+      background: #166534;
+      color: white;
+      padding: 24px 16px;
+      position: fixed;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      overflow-y: auto;
+    }
+
+    .logo {
+      text-align: center;
+      padding: 8px 4px 24px;
+      border-bottom: 1px solid rgba(255,255,255,.2);
+      margin-bottom: 18px;
+    }
+
+    .logo .circle {
+      width: 58px;
+      height: 58px;
+      border-radius: 50%;
+      background: white;
+      color: #166534;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 10px;
+      font-weight: 800;
+      font-size: 20px;
+    }
+
+    .logo h1 {
+      margin: 0;
+      font-size: 18px;
+    }
+
+    .logo p {
+      margin: 5px 0 0;
+      font-size: 12px;
+      opacity: .85;
+    }
+
+    .nav-btn {
+      width: 100%;
+      border: 0;
+      background: transparent;
+      color: white;
+      padding: 13px 14px;
+      margin: 4px 0;
+      border-radius: 10px;
+      text-align: left;
+      cursor: pointer;
+    }
+
+    .nav-btn:hover,
+    .nav-btn.active {
+      background: #15803d;
+    }
+
+    /* ===== Main ===== */
+    .main {
+      margin-left: 245px;
+      width: calc(100% - 245px);
+      padding: 30px;
+    }
+
+    .page { display: none; }
+    .page.active { display: block; }
+
+    .topbar {
+      margin-bottom: 24px;
+    }
+
+    .topbar h2 {
+      margin: 0 0 5px;
+      font-size: 28px;
+    }
+
+    .topbar p {
+      margin: 0;
+      color: #64746a;
+    }
+
+    /* ===== Cards ===== */
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+    }
+
+    .card {
+      background: white;
+      border: 1px solid #e3eae5;
+      border-radius: 16px;
+      padding: 20px;
+      box-shadow: 0 5px 20px rgba(20, 70, 40, .05);
+    }
+
+    .stat .label {
+      color: #718078;
+      font-size: 14px;
+    }
+
+    .stat .value {
+      margin-top: 8px;
+      font-size: 25px;
+      font-weight: 800;
+    }
+
+    .green { color: #15803d; }
+    .red { color: #dc2626; }
+    .orange { color: #d97706; }
+
+    .hero {
+      background: linear-gradient(135deg, #166534, #22c55e);
+      color: white;
+      border-radius: 20px;
+      padding: 30px;
+      margin-bottom: 20px;
+    }
+
+    .hero h2 {
+      margin: 0 0 8px;
+      font-size: 30px;
+    }
+
+    .hero p {
+      margin: 0;
+      max-width: 760px;
+      line-height: 1.7;
+    }
+
+    .section-title {
+      margin: 25px 0 12px;
+      font-size: 20px;
+    }
+
+    /* ===== Forms ===== */
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 14px;
+    }
+
+    .field label {
+      display: block;
+      font-weight: 700;
+      margin-bottom: 6px;
+      font-size: 14px;
+    }
+
+    .field input,
+    .field select {
+      width: 100%;
+      padding: 11px 12px;
+      border: 1px solid #cfd9d2;
+      border-radius: 9px;
+      background: white;
+      outline: none;
+    }
+
+    .field input:focus,
+    .field select:focus {
+      border-color: #16a34a;
+    }
+
+    .full { grid-column: 1 / -1; }
+
+    .btn {
+      border: 0;
+      border-radius: 9px;
+      padding: 11px 16px;
+      cursor: pointer;
+      font-weight: 700;
+    }
+
+    .btn-primary {
+      background: #15803d;
+      color: white;
+    }
+
+    .btn-danger {
+      background: #fee2e2;
+      color: #b91c1c;
+    }
+
+    .btn-secondary {
+      background: #e8f2eb;
+      color: #166534;
+    }
+
+    /* ===== Tables ===== */
+    .table-wrap {
+      overflow-x: auto;
+      margin-top: 16px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: white;
+    }
+
+    th, td {
+      padding: 12px 10px;
+      border-bottom: 1px solid #e7ece9;
+      text-align: left;
+      white-space: nowrap;
+    }
+
+    th {
+      background: #f0f6f2;
+      color: #3d5045;
+    }
+
+    /* ===== Budget ===== */
+    .budget-box {
+      text-align: center;
+      padding: 30px;
+    }
+
+    .big-number {
+      font-size: 42px;
+      font-weight: 900;
+      color: #166534;
+      margin: 10px 0;
+    }
+
+    .progress {
+      height: 14px;
+      background: #e8eee9;
+      border-radius: 99px;
+      overflow: hidden;
+      margin-top: 15px;
+    }
+
+    .progress-bar {
+      height: 100%;
+      width: 0%;
+      background: #22c55e;
+      transition: .3s;
+    }
+
+    /* ===== Funding ===== */
+    .fund-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 18px;
+    }
+
+    .fund-card {
+      background: white;
+      border: 1px solid #dfe8e1;
+      border-radius: 16px;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      min-height: 245px;
+    }
+
+    .fund-tag {
+      display: inline-block;
+      width: fit-content;
+      background: #dcfce7;
+      color: #166534;
+      padding: 5px 9px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 800;
+      margin-bottom: 12px;
+    }
+
+    .fund-card h3 {
+      margin: 0 0 8px;
+      font-size: 18px;
+    }
+
+    .fund-card p {
+      color: #637269;
+      line-height: 1.6;
+      font-size: 14px;
+      flex: 1;
+    }
+
+    .fund-link {
+      text-decoration: none;
+      text-align: center;
+      background: #166534;
+      color: white;
+      padding: 11px;
+      border-radius: 9px;
+      font-weight: 700;
+    }
+
+    /* ===== Responsive ===== */
+    @media (max-width: 1050px) {
+      .grid { grid-template-columns: repeat(2, 1fr); }
+      .fund-grid { grid-template-columns: 1fr 1fr; }
+    }
+
+    @media (max-width: 760px) {
+      .sidebar {
+        position: static;
+        width: 100%;
+      }
+
+      .app {
+        display: block;
+      }
+
+      .main {
+        margin-left: 0;
+        width: 100%;
+        padding: 18px;
+      }
+
+      .grid,
+      .form-grid,
+      .fund-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .full {
+        grid-column: auto;
+      }
+    }
+  </style>
+</head>
+
+<body>
+<div class="app">
+
+  <!-- ===== SIDEBAR ===== -->
+  <aside class="sidebar">
+    <div class="logo">
+      <div class="circle">KU</div>
+      <h1>KU-CK Budget Planner</h1>
+      <p>มก.ฉกส. จัดการเงินอย่างง่าย</p>
+    </div>
+
+    <button class="nav-btn active" onclick="showPage('home', this)">🏠 หน้าหลัก</button>
+    <button class="nav-btn" onclick="showPage('income', this)">💰 รายรับ</button>
+    <button class="nav-btn" onclick="showPage('expense', this)">🧾 รายจ่าย</button>
+    <button class="nav-btn" onclick="showPage('budget', this)">📊 งบประมาณ</button>
+    <button class="nav-btn" onclick="showPage('summary', this)">📈 สรุปภาพรวม</button>
+    <button class="nav-btn" onclick="showPage('funds', this)">🎓 แหล่งทุน</button>
+  </aside>
+
+  <main class="main">
+
+    <!-- ===== HOME ===== -->
+    <section id="home" class="page active">
+      <div class="hero">
+        <h2>KU-CK Budget Planner</h2>
+        <p>
+          เครื่องมือช่วยนิสิต มก.ฉกส. วางแผนรายรับ รายจ่าย
+          และดูเงินคงเหลือ เพื่อช่วยลดปัญหา “เงินหมดกลางเดือน”
+        </p>
+      </div>
+
+      <div class="grid">
+        <div class="card stat">
+          <div class="label">รายรับทั้งหมด</div>
+          <div id="homeIncome" class="value green">฿0</div>
+        </div>
+        <div class="card stat">
+          <div class="label">รายจ่ายทั้งหมด</div>
+          <div id="homeExpense" class="value red">฿0</div>
+        </div>
+        <div class="card stat">
+          <div class="label">เงินคงเหลือ</div>
+          <div id="homeBalance" class="value">฿0</div>
+        </div>
+        <div class="card stat">
+          <div class="label">งบประมาณต่อวัน</div>
+          <div id="homeDaily" class="value orange">฿0</div>
+        </div>
+      </div>
+
+      <h3 class="section-title">วิธีใช้งาน</h3>
+      <div class="card">
+        <ol style="line-height:2;">
+          <li>เพิ่มเงินที่ได้รับในหน้า <b>รายรับ</b></li>
+          <li>บันทึกค่าใช้จ่ายในหน้า <b>รายจ่าย</b></li>
+          <li>ตรวจสอบงบที่เหลือในหน้า <b>งบประมาณ</b></li>
+          <li>ดูภาพรวมการใช้เงินในหน้า <b>สรุปภาพรวม</b></li>
+          <li>หากต้องการข้อมูลความช่วยเหลือ ให้ดูที่ <b>แหล่งทุน</b></li>
+        </ol>
+      </div>
+    </section>
+
+    <!-- ===== INCOME ===== -->
+    <section id="income" class="page">
+      <div class="topbar">
+        <h2>💰 รายรับ</h2>
+        <p>บันทึกเงินที่ได้รับ เช่น ผู้ปกครอง กยศ./กรอ. หรือรายได้พิเศษ</p>
+      </div>
+
+      <div class="card">
+        <form id="incomeForm">
+          <div class="form-grid">
+            <div class="field">
+              <label>วันที่</label>
+              <input id="incomeDate" type="date" required>
+            </div>
+
+            <div class="field">
+              <label>แหล่งที่มาของเงิน</label>
+              <select id="incomeSource" required>
+                <option value="">-- เลือก --</option>
+                <option>ผู้ปกครอง</option>
+                <option>กยศ./กรอ.</option>
+                <option>งานพิเศษ</option>
+                <option>ทุนการศึกษา</option>
+                <option>อื่น ๆ</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label>จำนวนเงิน (บาท)</label>
+              <input id="incomeAmount" type="number" min="0" step="0.01" required>
+            </div>
+
+            <div class="field">
+              <label>หมายเหตุ</label>
+              <input id="incomeNote" type="text" placeholder="เช่น เงินค่าครองชีพ">
+            </div>
+
+            <div class="full">
+              <button class="btn btn-primary" type="submit">+ เพิ่มรายรับ</button>
+            </div>
+          </div>
+        </form>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>วันที่</th>
+              <th>แหล่งที่มา</th>
+              <th>จำนวนเงิน</th>
+              <th>หมายเหตุ</th>
+              <th>จัดการ</th>
+            </tr>
+          </thead>
+          <tbody id="incomeTable"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ===== EXPENSE ===== -->
+    <section id="expense" class="page">
+      <div class="topbar">
+        <h2>🧾 รายจ่าย</h2>
+        <p>บันทึกค่าใช้จ่ายที่เกิดขึ้นในแต่ละวัน</p>
+      </div>
+
+      <div class="card">
+        <form id="expenseForm">
+          <div class="form-grid">
+            <div class="field">
+              <label>วันที่</label>
+              <input id="expenseDate" type="date" required>
+            </div>
+
+            <div class="field">
+              <label>รายการ</label>
+              <input id="expenseName" type="text" placeholder="เช่น ข้าวกลางวัน" required>
+            </div>
+
+            <div class="field">
+              <label>หมวดหมู่</label>
+              <select id="expenseCategory" required>
+                <option value="">-- เลือก --</option>
+                <option>อาหาร</option>
+                <option>ที่พัก</option>
+                <option>เดินทาง</option>
+                <option>การเรียน</option>
+                <option>ของใช้ส่วนตัว</option>
+                <option>ค่าน้ำ/ค่าไฟ</option>
+                <option>อินเทอร์เน็ต</option>
+                <option>อื่น ๆ</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label>จำนวนเงิน (บาท)</label>
+              <input id="expenseAmount" type="number" min="0" step="0.01" required>
+            </div>
+
+            <div class="full">
+              <button class="btn btn-primary" type="submit">+ เพิ่มรายจ่าย</button>
+            </div>
+          </div>
+        </form>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>วันที่</th>
+              <th>รายการ</th>
+              <th>หมวดหมู่</th>
+              <th>จำนวนเงิน</th>
+              <th>จัดการ</th>
+            </tr>
+          </thead>
+          <tbody id="expenseTable"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ===== BUDGET ===== -->
+    <section id="budget" class="page">
+      <div class="topbar">
+        <h2>📊 งบประมาณ</h2>
+        <p>คำนวณเงินคงเหลือและงบประมาณที่ควรใช้ต่อวัน</p>
+      </div>
+
+      <div class="grid">
+        <div class="card stat">
+          <div class="label">รายรับ</div>
+          <div id="budgetIncome" class="value green">฿0</div>
+        </div>
+        <div class="card stat">
+          <div class="label">รายจ่าย</div>
+          <div id="budgetExpense" class="value red">฿0</div>
+        </div>
+        <div class="card stat">
+          <div class="label">เงินเหลือ</div>
+          <div id="budgetBalance" class="value">฿0</div>
+        </div>
+        <div class="card stat">
+          <div class="label">งบต่อวัน</div>
+          <div id="budgetDaily" class="value orange">฿0</div>
+        </div>
+      </div>
+
+      <div class="card budget-box" style="margin-top:18px;">
+        <h3>สัดส่วนการใช้เงิน</h3>
+        <div id="budgetPercent" class="big-number">0%</div>
+        <div class="progress">
+          <div id="budgetProgress" class="progress-bar"></div>
+        </div>
+        <p id="budgetMessage" style="margin-top:15px;color:#637269;"></p>
+      </div>
+    </section>
+
+    <!-- ===== SUMMARY ===== -->
+    <section id="summary" class="page">
+      <div class="topbar">
+        <h2>📈 สรุปภาพรวม</h2>
+        <p>ดูภาพรวมการเงินและหมวดหมู่รายจ่าย</p>
+      </div>
+
+      <div class="grid">
+        <div class="card stat">
+          <div class="label">รายรับทั้งหมด</div>
+          <div id="sumIncome" class="value green">฿0</div>
+        </div>
+        <div class="card stat">
+          <div class="label">รายจ่ายทั้งหมด</div>
+          <div id="sumExpense" class="value red">฿0</div>
+        </div>
+        <div class="card stat">
+          <div class="label">เงินคงเหลือ</div>
+          <div id="sumBalance" class="value">฿0</div>
+        </div>
+        <div class="card stat">
+          <div class="label">จำนวนรายการรายจ่าย</div>
+          <div id="sumCount" class="value">0</div>
+        </div>
+      </div>
+
+      <h3 class="section-title">รายจ่ายตามหมวดหมู่</h3>
+      <div class="card">
+        <div id="categorySummary"></div>
+      </div>
+    </section>
+
+    <!-- ===== FUNDS ===== -->
+    <section id="funds" class="page">
+      <div class="topbar">
+        <h2>🎓 แหล่งทุนและสวัสดิการสำหรับนิสิต</h2>
+        <p>รวมข้อมูล 3 แหล่งที่เกี่ยวข้องกับการขอความช่วยเหลือด้านการเงิน</p>
+      </div>
+
+      <div class="fund-grid">
+
+        <!-- ทุนที่ 1 -->
+        <article class="fund-card">
+          <span class="fund-tag">ทุน มก.ฉกส.</span>
+          <h3>ทุนการศึกษา มก.ฉกส. ปี 2569</h3>
+          <p>
+            หน้าประกาศกลางของวิทยาเขต สำหรับติดตามประกาศทุนการศึกษา
+            และรายชื่อนิสิตที่ได้รับทุนในปีการศึกษา 2569
+          </p>
+          <a
+            class="fund-link"
+            href="https://occ.csc.ku.ac.th/dca/?page_id=2126"
+            target="_blank"
+            rel="noopener"
+          >เปิดเว็บไซต์</a>
+        </article>
+
+        <!-- ทุนที่ 2 -->
+        <article class="fund-card">
+          <span class="fund-tag">กยศ. / กรอ.</span>
+          <h3>กองทุนกู้ยืมเพื่อการศึกษา</h3>
+          <p>
+            ข้อมูลเกี่ยวกับกองทุนเงินให้กู้ยืมทางการศึกษา
+            และช่องทางติดตามข่าวสารหรือเงื่อนไขการกู้ยืม
+          </p>
+          <a
+            class="fund-link"
+            href="https://www.studentloan.or.th/"
+            target="_blank"
+            rel="noopener"
+          >เปิดเว็บไซต์</a>
+        </article>
+
+        <!-- ทุนที่ 3 -->
+        <article class="fund-card">
+          <span class="fund-tag">ฝ่ายนิสิต</span>
+          <h3>กองบริหารวิชาการและนิสิต มก.ฉกส.</h3>
+          <p>
+            ช่องทางของมหาวิทยาลัยสำหรับติดตามข้อมูลสำหรับนิสิต
+            รวมถึงหัวข้อทุนการศึกษาและบริการที่เกี่ยวข้อง
+          </p>
+          <a
+            class="fund-link"
+            href="https://occ.csc.ku.ac.th/das/"
+            target="_blank"
+            rel="noopener"
+          >เปิดเว็บไซต์</a>
+        </article>
+
+      </div>
+
+    </section>
+
+  </main>
+</div>
+
+<script>
+  /* =========================================================
+     KU-CK Budget Planner
+     ข้อมูลถูกเก็บใน localStorage ของเบราว์เซอร์
+     ========================================================= */
+
+  let incomes = JSON.parse(localStorage.getItem("ku_income")) || [];
+  let expenses = JSON.parse(localStorage.getItem("ku_expense")) || [];
+
+  const money = (value) =>
+    "฿" + Number(value || 0).toLocaleString("th-TH", {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 2
+    });
+
+  function saveData() {
+    localStorage.setItem("ku_income", JSON.stringify(incomes));
+    localStorage.setItem("ku_expense", JSON.stringify(expenses));
+  }
+
+  function totalIncome() {
+    return incomes.reduce((sum, item) => sum + Number(item.amount), 0);
+  }
+
+  function totalExpense() {
+    return expenses.reduce((sum, item) => sum + Number(item.amount), 0);
+  }
+
+  function balance() {
+    return totalIncome() - totalExpense();
+  }
+
+  function dailyBudget() {
+    return Math.max(balance(), 0) / 30;
+  }
+
+  /* ===== Navigation ===== */
+  function showPage(pageId, button) {
+    document.querySelectorAll(".page").forEach(page => {
+      page.classList.remove("active");
+    });
+
+    document.getElementById(pageId).classList.add("active");
+
+    document.querySelectorAll(".nav-btn").forEach(btn => {
+      btn.classList.remove("active");
+    });
+
+    button.classList.add("active");
+    window.scrollTo({ top: 0, behavior: "smooth" });
+    updateAll();
+  }
+
+  /* ===== Income ===== */
+  document.getElementById("incomeForm").addEventListener("submit", function(event) {
+    event.preventDefault();
+
+    const item = {
+      id: Date.now(),
+      date: document.getElementById("incomeDate").value,
+      source: document.getElementById("incomeSource").value,
+      amount: Number(document.getElementById("incomeAmount").value),
+      note: document.getElementById("incomeNote").value
+    };
+
+    incomes.push(item);
+    saveData();
+    this.reset();
+    renderIncome();
+    updateAll();
+    alert("เพิ่มรายรับเรียบร้อยแล้ว");
+  });
+
+  function renderIncome() {
+    const table = document.getElementById("incomeTable");
+
+    if (incomes.length === 0) {
+      table.innerHTML = `
+        <tr>
+          <td colspan="5" style="text-align:center;color:#7b8a80;">
+            ยังไม่มีข้อมูลรายรับ
+          </td>
+        </tr>
+      `;
+      return;
+    }
+
+    table.innerHTML = incomes
+      .slice()
+      .reverse()
+      .map(item => `
+        <tr>
+          <td>${item.date}</td>
+          <td>${item.source}</td>
+          <td>${money(item.amount)}</td>
+          <td>${item.note || "-"}</td>
+          <td>
+            <button class="btn btn-danger" onclick="deleteIncome(${item.id})">
+              ลบ
+            </button>
+          </td>
+        </tr>
+      `).join("");
+  }
+
+  function deleteIncome(id) {
+    if (!confirm("ต้องการลบรายการนี้ใช่หรือไม่?")) return;
+
+    incomes = incomes.filter(item => item.id !== id);
+    saveData();
+    renderIncome();
+    updateAll();
+  }
+
+  /* ===== Expense ===== */
+  document.getElementById("expenseForm").addEventListener("submit", function(event) {
+    event.preventDefault();
+
+    const item = {
+      id: Date.now(),
+      date: document.getElementById("expenseDate").value,
+      name: document.getElementById("expenseName").value,
+      category: document.getElementById("expenseCategory").value,
+      amount: Number(document.getElementById("expenseAmount").value)
+    };
+
+    expenses.push(item);
+    saveData();
+    this.reset();
+    renderExpense();
+    updateAll();
+    alert("เพิ่มรายจ่ายเรียบร้อยแล้ว");
+  });
+
+  function renderExpense() {
+    const table = document.getElementById("expenseTable");
+
+    if (expenses.length === 0) {
+      table.innerHTML = `
+        <tr>
+          <td colspan="5" style="text-align:center;color:#7b8a80;">
+            ยังไม่มีข้อมูลรายจ่าย
+          </td>
+        </tr>
+      `;
+      return;
+    }
+
+    table.innerHTML = expenses
+      .slice()
+      .reverse()
+      .map(item => `
+        <tr>
+          <td>${item.date}</td>
+          <td>${item.name}</td>
+          <td>${item.category}</td>
+          <td>${money(item.amount)}</td>
+          <td>
+            <button class="btn btn-danger" onclick="deleteExpense(${item.id})">
+              ลบ
+            </button>
+          </td>
+        </tr>
+      `).join("");
+  }
+
+  function deleteExpense(id) {
+    if (!confirm("ต้องการลบรายการนี้ใช่หรือไม่?")) return;
+
+    expenses = expenses.filter(item => item.id !== id);
+    saveData();
+    renderExpense();
+    updateAll();
+  }
+
+  /* ===== Summary ===== */
+  function renderCategories() {
+    const box = document.getElementById("categorySummary");
+
+    const categories = {};
+
+    expenses.forEach(item => {
+      categories[item.category] =
+        (categories[item.category] || 0) + Number(item.amount);
+    });
+
+    const entries = Object.entries(categories);
+
+    if (entries.length === 0) {
+      box.innerHTML = `<p style="color:#7b8a80;">ยังไม่มีข้อมูลรายจ่าย</p>`;
+      return;
+    }
+
+    const max = Math.max(...entries.map(([_, amount]) => amount));
+
+    box.innerHTML = entries.map(([category, amount]) => {
+      const width = max === 0 ? 0 : (amount / max) * 100;
+
+      return `
+        <div style="margin-bottom:18px;">
+          <div style="display:flex;justify-content:space-between;margin-bottom:6px;">
+            <b>${category}</b>
+            <span>${money(amount)}</span>
+          </div>
+
+          <div class="progress">
+            <div
+              class="progress-bar"
+              style="width:${width}%"
+            ></div>
+          </div>
+        </div>
+      `;
+    }).join("");
+  }
+
+  /* ===== Update all pages ===== */
+  function updateAll() {
+    const income = totalIncome();
+    const expense = totalExpense();
+    const remain = balance();
+    const daily = dailyBudget();
+
+    // Home
+    document.getElementById("homeIncome").textContent = money(income);
+    document.getElementById("homeExpense").textContent = money(expense);
+    document.getElementById("homeBalance").textContent = money(remain);
+    document.getElementById("homeDaily").textContent = money(daily);
+
+    // Budget
+    document.getElementById("budgetIncome").textContent = money(income);
+    document.getElementById("budgetExpense").textContent = money(expense);
+    document.getElementById("budgetBalance").textContent = money(remain);
+    document.getElementById("budgetDaily").textContent = money(daily);
+
+    let percent = income > 0 ? (expense / income) * 100 : 0;
+    percent = Math.min(percent, 100);
+
+    document.getElementById("budgetPercent").textContent =
+      percent.toFixed(0) + "%";
+
+    document.getElementById("budgetProgress").style.width =
+      percent + "%";
+
+    if (income === 0) {
+      document.getElementById("budgetMessage").textContent =
+        "เริ่มต้นโดยเพิ่มข้อมูลรายรับก่อน";
+    } else if (expense > income) {
+      document.getElementById("budgetMessage").textContent =
+        "รายจ่ายมากกว่ารายรับ ควรตรวจสอบรายการและวางแผนการใช้เงิน";
+    } else if (percent >= 80) {
+      document.getElementById("budgetMessage").textContent =
+        "ใช้เงินไปค่อนข้างมากเมื่อเทียบกับรายรับ ควรระวังค่าใช้จ่ายที่ไม่จำเป็น";
+    } else {
+      document.getElementById("budgetMessage").textContent =
+        "ยังมีเงินคงเหลือ สามารถวางแผนงบประมาณต่อวันได้";
+    }
+
+    // Summary
+    document.getElementById("sumIncome").textContent = money(income);
+    document.getElementById("sumExpense").textContent = money(expense);
+    document.getElementById("sumBalance").textContent = money(remain);
+    document.getElementById("sumCount").textContent = expenses.length;
+
+    renderCategories();
+  }
+
+  /* ===== Start ===== */
+  renderIncome();
+  renderExpense();
+  updateAll();
+
+  // ใส่วันที่วันนี้ให้อัตโนมัติ
+  const today = new Date().toISOString().split("T")[0];
+  document.getElementById("incomeDate").value = today;
+  document.getElementById("expenseDate").value = today;
+</script>
+
+</body>
+</html>
